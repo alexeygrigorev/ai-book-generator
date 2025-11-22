@@ -10,7 +10,18 @@ def get_client():
         _client = genai.Client()
     return _client
 
-def calculate_gemini_3_cost(usage_metadata, print_cost=False):
+from dataclasses import dataclass
+
+@dataclass
+class CostReport:
+    total_cost: float
+    input_cost: float
+    output_cost: float
+    prompt_tokens: int
+    output_tokens: int
+    tier_name: str
+
+def calculate_gemini_3_cost(usage_metadata, print_cost=False) -> CostReport:
     """
     Calculates cost for Gemini 3 Pro Preview based on usage_metadata object.
     Automatically handles the pricing tiers for prompts above/below 200k tokens.
@@ -57,7 +68,14 @@ def calculate_gemini_3_cost(usage_metadata, print_cost=False):
         print(f"Output Cost:     ${output_cost:.6f}")
         print(f"TOTAL COST:      ${total_cost:.6f}")
 
-    return total_cost
+    return CostReport(
+        total_cost=total_cost,
+        input_cost=input_cost,
+        output_cost=output_cost,
+        prompt_tokens=prompt_tokens,
+        output_tokens=total_output_tokens,
+        tier_name=tier_name
+    )
 
 def llm(instructions, prompt, model="models/gemini-3-pro-preview"):
     client = get_client()

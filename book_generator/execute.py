@@ -1,7 +1,8 @@
 import yaml
 from pathlib import Path
+from typing import List, Callable, Any
 from tqdm.auto import tqdm
-from book_generator.models import BookPlan, ChapterSpecs
+from book_generator.models import BookPlan, ChapterSpecs, BookSectionPlan
 from book_generator.utils import llm, calculate_gemini_3_cost
 
 writer_instructions = """
@@ -43,7 +44,19 @@ Current book progress:
 {book_progress}
 """.strip()
 
-def show_progress(done, current, todo, name_function):
+def show_progress(done: List[Any], current: Any, todo: List[Any], name_function: Callable[[Any], str]) -> str:
+    """
+    Generates a progress string showing completed, current, and upcoming items.
+
+    Args:
+        done: List of completed items.
+        current: The item currently being processed.
+        todo: List of items yet to be processed.
+        name_function: Function to extract a display name from an item.
+
+    Returns:
+        A formatted string representing the progress.
+    """
     progress_builder = []
 
     for c in done:
@@ -62,26 +75,34 @@ def show_progress(done, current, todo, name_function):
     return progress
 
 class ContentWriter:
-    def save_intro(self, part_number, chapter_number, content):
+    """Abstract base class for writing book content."""
+
+    def save_intro(self, part_number: int, chapter_number: int, content: str):
+        """Saves the chapter introduction."""
         raise NotImplementedError
 
-    def save_section(self, part_number, chapter_number, section_number, content):
+    def save_section(self, part_number: int, chapter_number: int, section_number: int, content: str):
+        """Saves a book section."""
         raise NotImplementedError
 
-    def intro_exists(self, part_number, chapter_number):
+    def intro_exists(self, part_number: int, chapter_number: int) -> bool:
+        """Checks if the chapter introduction already exists."""
         raise NotImplementedError
 
-    def section_exists(self, part_number, chapter_number, section_number):
+    def section_exists(self, part_number: int, chapter_number: int, section_number: int) -> bool:
+        """Checks if a book section already exists."""
         raise NotImplementedError
 
 class FileSystemWriter(ContentWriter):
+    """Concrete implementation of ContentWriter that saves to the file system."""
+
     def __init__(self, root_folder: Path):
         self.root_folder = root_folder
 
-    def _get_intro_path(self, part_number, chapter_number):
+    def _get_intro_path(self, part_number: int, chapter_number: int) -> Path:
         return self.root_folder / f'part_{part_number:02d}' / f'{chapter_number:02d}_00_intro.md'
 
-    def _get_section_path(self, part_number, chapter_number, section_number):
+    def _get_section_path(self, part_number: int, chapter_number: int, section_number: int) -> Path:
         return self.root_folder / f'part_{part_number:02d}' / f'{chapter_number:02d}_{section_number:02d}_section.md'
 
     def save_intro(self, part_number, chapter_number, content):
@@ -103,20 +124,26 @@ class FileSystemWriter(ContentWriter):
         return self._get_section_path(part_number, chapter_number, section_number).exists()
 
 class CostTracker:
+    """Tracks the cost of LLM usage."""
+
     def __init__(self):
         self.total_cost = 0.0
 
-    def update(self, cost, item_name):
+    def update(self, cost: float, item_name: str):
+        """Updates the total cost and prints the cost of the current item."""
         self.total_cost += cost
         print(f"  {item_name} cost: ${cost:.6f} | Total so far: ${self.total_cost:.6f}")
 
 class BookExecutor:
+    """Orchestrates the book generation process."""
+
     def __init__(self, book_plan: BookPlan, writer: ContentWriter):
         self.book_plan = book_plan
         self.writer = writer
         self.tracker = CostTracker()
 
-    def process_section(self, section, chapter_spec, chapter_progress, book_progress):
+    def process_section(self, section: BookSectionPlan, chapter_spec: ChapterSpecs, chapter_progress: str, book_progress: str) -> str:
+        """Generates content for a single section."""
         print(f"  Writing Section: {section.name}")
         
         section_outline = '\n'.join(section.bullet_points)
@@ -130,38 +157,74 @@ class BookExecutor:
         )
 
         section_response = llm(instructions=writer_instructions, prompt=section_prompt)
-        section_cost = calculate_gemini_3_cost(section_response.usage_metadata)
-        self.tracker.update(section_cost, "Section")
+        section_report = calculate_gemini_3_cost(section_response.usage_metadata)
+        self.tracker.update(section_report.total_cost, "Section")
 
         return section_response.text
 
-    def process_chapter(self, current_spec, chapters_done, chapters_todo):
-        print(f"Processing Chapter {current_spec.chapter_number}: {current_spec.chapter.name}")
-
-        # 1. Chapter Intro
+    def _process_chapter_intro(self, current_spec: ChapterSpecs):
+        """Generates and saves the chapter introduction."""
         if self.writer.intro_exists(current_spec.part_number, current_spec.chapter_number):
             print(f"  Intro already exists, skipping.")
-        else:
-            chapter_overview = yaml.safe_dump(
-                current_spec.chapter.model_dump(),
-                allow_unicode=True,
-                sort_keys=False
-            )
+            return
 
-            intro_response = llm(chapter_intro_instructions, chapter_overview)
-            intro_cost = calculate_gemini_3_cost(intro_response.usage_metadata)
-            self.tracker.update(intro_cost, "Intro")
+        chapter_overview = yaml.safe_dump(
+            current_spec.chapter.model_dump(),
+            allow_unicode=True,
+            sort_keys=False
+        )
 
-            intro_text = intro_response.text
-            intro_full_text = f"""
-# {current_spec.chapter_number}. {current_spec.chapter.name}
+        intro_response = llm(
+            instructions=chapter_intro_instructions,
+            prompt=chapter_overview
+        )
 
-{intro_text}
-""".strip()
+        intro_report = calculate_gemini_3_cost(intro_response.usage_metadata)
+        self.tracker.update(intro_report.total_cost, "Intro")
 
-            self.writer.save_intro(current_spec.part_number, current_spec.chapter_number, intro_full_text)
+        intro_text = intro_response.text
+        intro_full_text = (
+            f"# {current_spec.chapter_number}. {current_spec.chapter.name}\n\n"
+            f"{intro_text}"
+        ).strip()
 
-        # 2. Sections
+        self.writer.save_intro(current_spec.part_number, current_spec.chapter_number, intro_full_text)
+
+    def _process_single_section(self, i: int, current_spec: ChapterSpecs, book_progress: str):
+        """Processes a single section within a chapter."""
+        current_section = current_spec.sections[i]
+        section_number = i + 1
+        
+        if self.writer.section_exists(current_spec.part_number, current_spec.chapter_number, section_number):
+            print(f"  Section {section_number} ({current_section.name}) already exists, skipping.")
+            return
+
+        sections_completed = current_spec.sections[:i]
+        sections_todo = current_spec.sections[i+1:]
+        
+        chapter_progress = show_progress(
+            sections_completed,
+            current_section,
+            sections_todo,
+            name_function=lambda c: c.name
+        )
+
+        section_content = self.process_section(
+            current_section, 
+            current_spec, 
+            chapter_progress, 
+            book_progress
+        )
+
+        full_section_text = (
+            f"## {current_section.name}\n\n"
+            f"{section_content}"
+        ).strip()
+
+        self.writer.save_section(current_spec.part_number, current_spec.chapter_number, section_number, full_section_text)
+
+    def _process_chapter_sections(self, current_spec: ChapterSpecs, chapters_done: List[ChapterSpecs], chapters_todo: List[ChapterSpecs]):
+        """Iterates through and processes all sections in a chapter."""
         book_progress = show_progress(
             chapters_done,
             current_spec,
@@ -169,40 +232,22 @@ class BookExecutor:
             name_function=lambda c: c.chapter.name
         )
 
-        for i, current_section in enumerate(current_spec.sections):
-            section_number = i + 1
-            
-            if self.writer.section_exists(current_spec.part_number, current_spec.chapter_number, section_number):
-                print(f"  Section {section_number} ({current_section.name}) already exists, skipping.")
-                continue
+        for i in range(len(current_spec.sections)):
+            self._process_single_section(i, current_spec, book_progress)
 
-            sections_completed = current_spec.sections[:i]
-            sections_todo = current_spec.sections[i+1:]
-            
-            chapter_progress = show_progress(
-                sections_completed,
-                current_section,
-                sections_todo,
-                name_function=lambda c: c.name
-            )
+    def process_chapter(self, current_spec: ChapterSpecs, chapters_done: List[ChapterSpecs], chapters_todo: List[ChapterSpecs]):
+        """Processes an entire chapter, including introduction and sections."""
+        print(f"Processing Chapter {current_spec.chapter_number}: {current_spec.chapter.name}")
+        start_cost = self.tracker.total_cost
 
-            section_content = self.process_section(
-                current_section, 
-                current_spec, 
-                chapter_progress, 
-                book_progress
-            )
+        self._process_chapter_intro(current_spec)
+        self._process_chapter_sections(current_spec, chapters_done, chapters_todo)
 
-            full_section_text = f"""
-## {current_section.name}
+        chapter_cost = self.tracker.total_cost - start_cost
+        print(f"Chapter {current_spec.chapter_number} cost: ${chapter_cost:.6f}")
 
-{section_content}
-""".strip()
-
-            self.writer.save_section(current_spec.part_number, current_spec.chapter_number, section_number, full_section_text)
-
-    def execute(self):
-        # Build specs
+    def _build_chapter_specs(self) -> List[ChapterSpecs]:
+        """Builds a flat list of chapter specifications from the book plan."""
         chapter_specs = []
         part_idx = 0
         chapter_idx = 0
@@ -219,17 +264,23 @@ class BookExecutor:
                     sections=chapter.sections
                 )
                 chapter_specs.append(specs)
+        return chapter_specs
 
+    def _process_all_chapters(self, chapter_specs: List[ChapterSpecs]):
+        """Iterates through and processes all chapters."""
         print(f"Total chapters to write: {len(chapter_specs)}")
 
-        # Execution Loop
         for i, current_spec in enumerate(chapter_specs):
             chapters_done = chapter_specs[:i]
             chapters_todo = chapter_specs[i+1:]
 
             self.process_chapter(current_spec, chapters_done, chapters_todo)
             print(f"Chapter {current_spec.chapter_number} completed.")
-        
+
+    def execute(self):
+        """Executes the entire book generation plan."""
+        chapter_specs = self._build_chapter_specs()
+        self._process_all_chapters(chapter_specs)
         print(f"Execution completed. Total Cost: ${self.tracker.total_cost:.6f}")
 
 def execute_plan():

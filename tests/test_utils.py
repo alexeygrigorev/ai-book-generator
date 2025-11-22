@@ -13,13 +13,14 @@ class TestUtils(unittest.TestCase):
             'thoughts_token_count': 0
         }
         
-        cost = calculate_gemini_3_cost(usage)
+        report = calculate_gemini_3_cost(usage)
         
         expected_input_cost = (100_000 / 1_000_000) * 2.00
         expected_output_cost = (10_000 / 1_000_000) * 12.00
         expected_total = expected_input_cost + expected_output_cost
         
-        self.assertAlmostEqual(cost, expected_total)
+        self.assertAlmostEqual(report.total_cost, expected_total)
+        self.assertEqual(report.tier_name, "Standard (<200k)")
 
     def test_cost_calculation_long_context_tier(self):
         # Long context tier (> 200k tokens)
@@ -32,14 +33,15 @@ class TestUtils(unittest.TestCase):
             'thoughts_token_count': 5_000
         }
         
-        cost = calculate_gemini_3_cost(usage)
+        report = calculate_gemini_3_cost(usage)
         
         expected_input_cost = (250_000 / 1_000_000) * 4.00
         total_output = 10_000 + 5_000
         expected_output_cost = (total_output / 1_000_000) * 18.00
         expected_total = expected_input_cost + expected_output_cost
         
-        self.assertAlmostEqual(cost, expected_total)
+        self.assertAlmostEqual(report.total_cost, expected_total)
+        self.assertEqual(report.tier_name, "Long Context (>200k)")
 
     def test_cost_calculation_object_access(self):
         # Test with an object that has attributes instead of dict
@@ -50,8 +52,8 @@ class TestUtils(unittest.TestCase):
                 self.thoughts_token_count = t
         
         usage = UsageMetadata(1000, 100, 0)
-        cost = calculate_gemini_3_cost(usage)
-        self.assertGreater(cost, 0)
+        report = calculate_gemini_3_cost(usage)
+        self.assertGreater(report.total_cost, 0)
 
 if __name__ == '__main__':
     unittest.main()
