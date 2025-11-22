@@ -1,5 +1,8 @@
+from dataclasses import dataclass
+
 from google import genai
 from google.genai import types
+
 
 # Initialize the client
 _client = None
@@ -10,7 +13,6 @@ def get_client():
         _client = genai.Client()
     return _client
 
-from dataclasses import dataclass
 
 @dataclass
 class CostReport:
