@@ -129,10 +129,11 @@ class CostTracker:
     def __init__(self):
         self.total_cost = 0.0
 
-    def update(self, cost: float, item_name: str):
-        """Updates the total cost and prints the cost of the current item."""
-        self.total_cost += cost
-        print(f"  {item_name} cost: ${cost:.6f} | Total so far: ${self.total_cost:.6f}")
+    def update(self, usage_metadata, item_name: str):
+        """Updates the total cost by calculating cost from usage_metadata."""
+        report = calculate_gemini_3_cost(usage_metadata)
+        self.total_cost += report.total_cost
+        print(f"  {item_name} cost: ${report.total_cost:.6f} | Total so far: ${self.total_cost:.6f}")
 
 class BookExecutor:
     """Orchestrates the book generation process."""
@@ -156,9 +157,12 @@ class BookExecutor:
             book_progress=book_progress
         )
 
-        section_response = llm(instructions=writer_instructions, prompt=section_prompt)
-        section_report = calculate_gemini_3_cost(section_response.usage_metadata)
-        self.tracker.update(section_report.total_cost, "Section")
+        section_response = llm(
+            instructions=writer_instructions,
+            prompt=section_prompt
+        )
+
+        self.tracker.update(section_response.usage_metadata, "Section")
 
         return section_response.text
 
@@ -179,8 +183,7 @@ class BookExecutor:
             prompt=chapter_overview
         )
 
-        intro_report = calculate_gemini_3_cost(intro_response.usage_metadata)
-        self.tracker.update(intro_report.total_cost, "Intro")
+        self.tracker.update(intro_response.usage_metadata, "Intro")
 
         intro_text = intro_response.text
         intro_full_text = (
