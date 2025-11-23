@@ -6,10 +6,7 @@ from book_generator.models import BookPlan
 class TestModels(unittest.TestCase):
     def test_load_plan_yaml(self):
         # Path to the existing plan.yaml
-        plan_path = Path('sirens/plan.yaml')
-        
-        if not plan_path.exists():
-            self.skipTest("sirens/plan.yaml not found, skipping integration test")
+        plan_path = Path('books/sirens/plan.yaml')
 
         with plan_path.open('rt', encoding='utf-8') as f:
             data = yaml.safe_load(f)
