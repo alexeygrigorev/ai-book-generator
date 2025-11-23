@@ -91,6 +91,14 @@ class ContentWriter:
         """Saves a book section."""
         raise NotImplementedError
 
+    def save_part_intro(self, part_number: int, content: str):
+        """Saves the part introduction."""
+        raise NotImplementedError
+
+    def save_back_cover(self, content: str):
+        """Saves the back cover description."""
+        raise NotImplementedError
+
     def intro_exists(self, part_number: int, chapter_number: int) -> bool:
         """Checks if the chapter introduction already exists."""
         raise NotImplementedError
@@ -99,6 +107,14 @@ class ContentWriter:
         self, part_number: int, chapter_number: int, section_number: int
     ) -> bool:
         """Checks if a book section already exists."""
+        raise NotImplementedError
+
+    def part_intro_exists(self, part_number: int) -> bool:
+        """Checks if the part introduction already exists."""
+        raise NotImplementedError
+
+    def back_cover_exists(self) -> bool:
+        """Checks if the back cover description already exists."""
         raise NotImplementedError
 
 
@@ -124,6 +140,12 @@ class FileSystemWriter(ContentWriter):
             / f"{chapter_number:02d}_{section_number:02d}_section.md"
         )
 
+    def _get_part_intro_path(self, part_number: int) -> Path:
+        return self.root_folder / f"part_{part_number:02d}" / "_part_intro.md"
+
+    def _get_back_cover_path(self) -> Path:
+        return self.root_folder / "back_cover.md"
+
     def save_intro(self, part_number, chapter_number, content):
         part_folder = self.root_folder / f"part_{part_number:02d}"
         part_folder.mkdir(exist_ok=True)
@@ -136,6 +158,16 @@ class FileSystemWriter(ContentWriter):
         file = self._get_section_path(part_number, chapter_number, section_number)
         file.write_text(content, encoding="utf-8")
 
+    def save_part_intro(self, part_number, content):
+        part_folder = self.root_folder / f"part_{part_number:02d}"
+        part_folder.mkdir(exist_ok=True)
+        file = self._get_part_intro_path(part_number)
+        file.write_text(content, encoding="utf-8")
+
+    def save_back_cover(self, content):
+        file = self._get_back_cover_path()
+        file.write_text(content, encoding="utf-8")
+
     def intro_exists(self, part_number, chapter_number):
         return self._get_intro_path(part_number, chapter_number).exists()
 
@@ -143,6 +175,12 @@ class FileSystemWriter(ContentWriter):
         return self._get_section_path(
             part_number, chapter_number, section_number
         ).exists()
+
+    def part_intro_exists(self, part_number):
+        return self._get_part_intro_path(part_number).exists()
+
+    def back_cover_exists(self):
+        return self._get_back_cover_path().exists()
 
 
 class CostTracker:
@@ -320,6 +358,27 @@ class BookExecutor:
                 chapter_specs.append(specs)
         return chapter_specs
 
+    def _process_back_cover(self):
+        """Saves the back cover description."""
+        if self.writer.back_cover_exists():
+            print("Back cover already exists, skipping.")
+            return
+
+        print("Saving back cover...")
+        self.writer.save_back_cover(self.book_plan.back_cover_description)
+
+    def _process_part_intros(self):
+        """Saves the part introductions."""
+        for i, part in enumerate(self.book_plan.parts):
+            part_number = i + 1
+            if self.writer.part_intro_exists(part_number):
+                print(f"Part {part_number} intro already exists, skipping.")
+                continue
+
+            print(f"Saving Part {part_number} intro...")
+            content = f"# Part {part_number}: {part.name}\n\n{part.introduction}"
+            self.writer.save_part_intro(part_number, content)
+
     def _process_all_chapters(self, chapter_specs: List[ChapterSpecs]):
         """Iterates through and processes all chapters."""
         print(f"Total chapters to write: {len(chapter_specs)}")
@@ -333,6 +392,8 @@ class BookExecutor:
 
     def execute(self):
         """Executes the entire book generation plan."""
+        self._process_back_cover()
+        self._process_part_intros()
         chapter_specs = self._build_chapter_specs()
         self._process_all_chapters(chapter_specs)
         print(f"Execution completed. Total Cost: ${self.tracker.total_cost:.6f}")
