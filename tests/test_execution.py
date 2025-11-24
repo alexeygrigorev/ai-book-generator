@@ -63,6 +63,7 @@ class TestExecution(unittest.TestCase):
         self.root_folder.mkdir()
         
         self.plan = BookPlan(
+            book_language='en',
             name="Test Book",
             target_reader="Testers",
             back_cover_description="A test book.",

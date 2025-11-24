@@ -13,6 +13,7 @@ class TestExecutorOutput(unittest.TestCase):
         self.root_folder.mkdir()
         
         self.plan = BookPlan(
+            book_language="en",
             name="Test Book",
             target_reader="Testers",
             back_cover_description="A compelling back cover description.",
@@ -142,6 +143,40 @@ class TestExecutorOutput(unittest.TestCase):
         executor.execute()
 
         mock_writer.save_part_intro.assert_not_called()
+
+    @patch('book_generator.execute.llm')
+    def test_execute_saves_russian_part_intros(self, mock_llm):
+        # Test that Russian books use Russian part labels
+        mock_response = MagicMock()
+        mock_response.text = "Generated content"
+        mock_response.usage_metadata = {'prompt_token_count': 10, 'candidates_token_count': 10}
+        mock_llm.return_value = mock_response
+
+        # Create a Russian book plan
+        russian_plan = BookPlan(
+            book_language='ru',
+            name="Тестовая книга",
+            target_reader="Тестеры",
+            back_cover_description="Описание книги",
+            parts=[
+                BookPartPlan(
+                    name="Первая часть",
+                    introduction="Введение в первую часть.",
+                    chapters=[]
+                )
+            ]
+        )
+
+        mock_writer = MagicMock()
+        mock_writer.back_cover_exists.return_value = False
+        mock_writer.part_intro_exists.return_value = False
+
+        executor = BookExecutor(russian_plan, mock_writer)
+        executor.execute()
+
+        # Check that Russian label "Часть" is used
+        expected_content = "# Часть 1: Первая часть\n\nВведение в первую часть."
+        mock_writer.save_part_intro.assert_called_once_with(1, expected_content)
 
 if __name__ == '__main__':
     unittest.main()

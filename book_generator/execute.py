@@ -1,9 +1,26 @@
 import yaml
 from pathlib import Path
-from typing import List, Callable, Any
+from typing import List, Callable, Any, Literal
 from tqdm.auto import tqdm
 from book_generator.models import BookPlan, ChapterSpecs, BookSectionPlan
 from book_generator.utils import llm, calculate_gemini_3_cost
+
+
+def get_part_label(language: Literal['ru', 'en', 'de']) -> str:
+    """Returns the localized label for 'Part' based on the book language.
+    
+    Args:
+        language: The book language code ('ru', 'en', or 'de')
+        
+    Returns:
+        The localized word for 'Part' in the specified language
+    """
+    labels = {
+        'en': 'Part',
+        'ru': 'Часть',
+        'de': 'Teil'
+    }
+    return labels.get(language, 'Part')
 
 writer_instructions = """
 Your task is based on the plan write a book section. 
@@ -376,7 +393,8 @@ class BookExecutor:
                 continue
 
             print(f"Saving Part {part_number} intro...")
-            content = f"# Part {part_number}: {part.name}\n\n{part.introduction}"
+            part_label = get_part_label(self.book_plan.book_language)
+            content = f"# {part_label} {part_number}: {part.name}\n\n{part.introduction}"
             self.writer.save_part_intro(part_number, content)
 
     def _process_all_chapters(self, chapter_specs: List[ChapterSpecs]):

@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from dataclasses import dataclass
+from typing import Literal
 
 class BookSectionPlan(BaseModel):
     name: str
@@ -16,6 +17,7 @@ class BookPartPlan(BaseModel):
     chapters: list[BookChapterPlan]
 
 class BookPlan(BaseModel):
+    book_language: Literal['ru', 'en', 'de']
     name: str
     target_reader: str
     back_cover_description: str
