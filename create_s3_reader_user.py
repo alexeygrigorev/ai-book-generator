@@ -6,24 +6,24 @@ import boto3
 import json
 import sys
 
-def create_read_only_user():
+def create_s3_user():
     bucket_name = "ai-generated-audio-books-eu-west-1-wav"
     user_name = "tts-audio-reader"
-    policy_name = "S3ReadOnlyPolicy"
+    policy_name = "S3ReadWritePolicy"
     
     # Initialize IAM client
     iam = boto3.client('iam')
     
     try:
         # 1. Create IAM user
-        print(f"Creating IAM user: {user_name}...")
+        print(f"Creating/Checking IAM user: {user_name}...")
         try:
             iam.create_user(UserName=user_name)
-            print(f"✓ User '{user_name}' created successfully")
+            print(f"User '{user_name}' created successfully")
         except iam.exceptions.EntityAlreadyExistsException:
-            print(f"✓ User '{user_name}' already exists")
+            print(f"User '{user_name}' already exists")
         
-        # 2. Create inline policy for read access to S3 bucket
+        # 2. Create inline policy for read/write access to S3 bucket
         policy_document = {
             "Version": "2012-10-17",
             "Statement": [
@@ -31,7 +31,8 @@ def create_read_only_user():
                     "Effect": "Allow",
                     "Action": [
                         "s3:GetObject",
-                        "s3:ListBucket"
+                        "s3:ListBucket",
+                        "s3:PutObject"
                     ],
                     "Resource": [
                         f"arn:aws:s3:::{bucket_name}",
@@ -41,13 +42,13 @@ def create_read_only_user():
             ]
         }
         
-        print(f"Attaching read-only policy to '{user_name}'...")
+        print(f"Attaching read/write policy to '{user_name}'...")
         iam.put_user_policy(
             UserName=user_name,
             PolicyName=policy_name,
             PolicyDocument=json.dumps(policy_document)
         )
-        print(f"✓ Policy attached successfully")
+        print(f"Policy attached successfully")
         
         # 3. Create access key
         print(f"Creating access key for '{user_name}'...")
@@ -66,7 +67,7 @@ def create_read_only_user():
         access_key = response['AccessKey']
         
         print("\n" + "="*70)
-        print("✓ IAM User Created Successfully!")
+        print("IAM User Created/Updated Successfully!")
         print("="*70)
         print("\nCopy and paste the following into your terminal:\n")
         print(f"export AWS_ACCESS_KEY_ID={access_key['AccessKeyId']}")
@@ -80,8 +81,8 @@ def create_read_only_user():
         print("\n" + "="*70)
         
     except Exception as e:
-        print(f"\n❌ Error: {e}", file=sys.stderr)
+        print(f"\nError: {e}", file=sys.stderr)
         sys.exit(1)
 
 if __name__ == "__main__":
-    create_read_only_user()
+    create_s3_user()

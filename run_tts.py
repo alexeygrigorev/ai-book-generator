@@ -6,7 +6,7 @@ def main():
     
     print(f"Starting TTS generation for book: {book_folder}")
     generator = TTSGenerator(
-        num_threads=3,
+        num_threads=1,
         s3_bucket="ai-generated-audio-books-eu-west-1-wav"
     )
     generator.process_book(book_folder)
