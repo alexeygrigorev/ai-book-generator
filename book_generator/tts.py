@@ -1,14 +1,12 @@
 import os
 import wave
-import json
-import time
 import threading
 import io
 from pathlib import Path
-from typing import Optional, List, Dict
+from typing import Optional
 from concurrent.futures import ThreadPoolExecutor
 from tqdm.auto import tqdm
-from google.genai import types
+
 import boto3
 from book_generator.utils import get_client, calculate_tts_cost
 

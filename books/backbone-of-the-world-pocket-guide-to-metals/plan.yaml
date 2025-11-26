@@ -1,0 +1,203 @@
+book_language: en
+name: 'The Backbone of the World: A Pocket Guide to Metals'
+slug: backbone-of-the-world-pocket-guide-to-metals
+target_reader: General science enthusiasts, students, and curious laypeople interested
+  in chemistry, history, and industry.
+back_cover_description: Without metals, human civilization as we know it would cease
+  to exist. From the iron in our blood to the lithium in our phones, these lustrous
+  elements form the invisible skeleton of our reality. 'The Backbone of the World'
+  takes you on a narrative-driven journey through the periodic table, exploring the
+  atomic magic that makes metals strong, the fiery history of their extraction, and
+  the high-tech future of the materials that shape our lives. Blending chemistry,
+  geology, and history, this pocket guide reveals why the story of humanity is, fundamentally,
+  the story of metals.
+parts:
+- name: The Substance of Civilization
+  introduction: This section introduces the fundamental definition of metals, distinguishing
+    them from other forms of matter through their luster, conductivity, and strength.
+    It sets the stage by acknowledging the absolute dependence of modern society on
+    these elements, tracing a roadmap from atomic structures to the initial forging
+    of human history.
+  chapters:
+  - name: Elemental Foundations
+    sections:
+    - name: The Sea of Electrons
+      bullet_points:
+      - Definition of the metallic bond and how it differs from covalent or ionic
+        bonds.
+      - Explanation of the 'sea of delocalized electrons' model in accessible terms.
+      - How electron mobility results in high electrical and thermal conductivity.
+      - 'The atomic reasons behind ductility and malleability: why metals dent instead
+        of shattering.'
+      - The interaction of light with free electrons causing the characteristic metallic
+        luster.
+      - Comparison of metallic density and melting points across different groups.
+      - The concept of alloys as solid solutions rather than chemical compounds.
+      - How grain structure and heat treatment influence physical properties.
+    - name: Order in the Table
+      bullet_points:
+      - 'Navigating the Periodic Table: location and characteristics of metals vs.
+        non-metals.'
+      - 'The Alkali and Alkaline Earth metals: high reactivity and soft textures.'
+      - 'The Transition Metals: the industrial workhorses like Iron, Copper, and Nickel.'
+      - 'The Noble Metals: understanding Gold, Silver, and Platinum''s resistance
+        to reaction.'
+      - The Post-transition metals and the blurred lines of metalloids.
+      - 'The Lanthanides and Actinides: the heavy and often radioactive elements.'
+      - Trends in the periodic table regarding atomic radius and ionization energy.
+      - Why some elements behave like metals under extreme pressure.
+    - name: Stellar Origins and Earthly Ores
+      bullet_points:
+      - 'Cosmic synthesis: creation of light metals in stars and heavy metals in supernovae.'
+      - The role of neutron star collisions in creating gold and platinum.
+      - Planetary formation and the sinking of heavy metals to the Earth's core.
+      - 'Geological distribution: why some metals are evenly spread and others cluster.'
+      - The concept of Native Metals (Au, Ag, Cu) found in pure form in nature.
+      - 'Understanding Ores: oxides, sulfides, and silicates that lock metals away.'
+      - The Clarke number and the relative abundance of elements in the crust.
+      - Formation of mineral veins and hydrothermal deposits.
+    - name: The Rust and the Shine
+      bullet_points:
+      - 'The thermodynamics of stability: why metals want to return to ore.'
+      - The chemical process of oxidation and reduction explained simply.
+      - Iron oxide (rust) vs. Aluminum oxide (protective barrier).
+      - The electrochemical series and galvanic corrosion between dissimilar metals.
+      - 'Passivation: how metals like Chromium protect themselves and others.'
+      - The concept of patinas on Copper and Bronze as historical indicators.
+      - Why Gold and Platinum remain eternal and untarnished.
+      - 'Human battles against entropy: painting, plating, and cathodic protection.'
+  - name: From Stone to Steel
+    sections:
+    - name: The Native Metals and The Bronze Age
+      bullet_points:
+      - 'The Neolithic use of native copper: cold hammering and annealing.'
+      - The accidental discovery of smelting from malachite in pottery kilns.
+      - The properties of Copper vs. Stone tools and the initial limitations.
+      - 'The invention of Alloys: mixing Tin with Copper to create Bronze.'
+      - How Bronze changed warfare, agriculture, and social hierarchy.
+      - 'The logistics of the Bronze Age: trade routes for Tin across the ancient
+        world.'
+      - 'Casting techniques: lost-wax casting and the creation of intricate art.'
+      - The mysterious Bronze Age Collapse and the disruption of metal trade.
+    - name: Coinage, Conquest, and Alchemy
+      bullet_points:
+      - The transition from barter to metal currency (Electrum, Gold, Silver).
+      - The Lydian invention of standard coinage and its economic impact.
+      - 'Cupellation: the ancient refining technique to separate Silver from Lead.'
+      - The role of mercury (quicksilver) in amalgamation and gilding.
+      - 'Alchemy''s contribution: early chemical experimentation and categorization.'
+      - The Seven Metals of Antiquity and their planetary associations.
+      - Lead piping in Rome and the historical debate on lead poisoning.
+      - 'Medieval metallurgy: from church bells to early cannons.'
+    - name: The Iron Age and the Blast Furnace
+      bullet_points:
+      - 'The difficulty of smelting Iron: higher melting points compared to Copper.'
+      - The Bloomery process and the labor-intensive creation of wrought iron.
+      - 'The democratization of tools: Iron''s abundance compared to Tin and Copper.'
+      - The accidental discovery of steeling (carburization) by blacksmiths.
+      - The development of the Blast Furnace and the production of Cast Iron.
+      - The role of charcoal and the deforestation of Europe.
+      - Puddling furnaces and the industrial demand for malleable iron.
+      - The distinction between wrought iron, cast iron, and steel based on carbon
+        content.
+    - name: The Age of Aluminum and Steel
+      bullet_points:
+      - The Industrial Revolution and the need for stronger, cheaper materials.
+      - 'The Bessemer Process: blowing air to burn off impurities.'
+      - The Open-Hearth furnace and the era of mass-produced steel.
+      - 'Alloying steel for specific properties: Manganese, Chromium, and Vanadium.'
+      - Aluminum's history as a metal more precious than gold.
+      - 'The Hall-Héroult process: using electricity to unlock Aluminum from Bauxite.'
+      - The rise of skyscrapers, suspension bridges, and railways.
+      - How widespread steel and aluminum enabled the automobile and aerospace industries.
+- name: The Modern Forge and Future Frontiers
+  introduction: Moving from history to the present day, this part explores how specific
+    metals fuel the distinct sectors of modern life, from the skeleton of our cities
+    to the neurons of our digital networks. It concludes with a forward-looking analysis
+    of sustainability, scarcity, and the sci-fi innovations that will define the next
+    metallic age.
+  chapters:
+  - name: The Invisible Skeleton
+    sections:
+    - name: 'The Builders: Iron, Steel, and Titanium'
+      bullet_points:
+      - The continuing dominance of steel in global infrastructure and construction.
+      - 'Reinforced concrete: the symbiotic relationship between steel and cement.'
+      - 'Stainless steel: the chemistry of chromium and corrosion resistance.'
+      - 'Titanium: the extraction difficulties (Kroll process) and high cost.'
+      - Titanium's strength-to-weight ratio and its critical role in aerospace.
+      - 'Superalloys in jet engines: resisting creep at extreme temperatures.'
+      - 'Metals in the automotive industry: the shift to high-strength aluminum.'
+      - Safety factors and engineering standards for structural metals.
+    - name: 'The Conductors: Copper, Gold, and Silver'
+      bullet_points:
+      - 'Copper: the undisputed king of the electrical grid and wiring.'
+      - The trade-off between conductivity, weight, and cost (Copper vs. Aluminum).
+      - 'Silver: the most conductive metal and its use in precision contacts.'
+      - 'Gold: using non-reactive plating for reliable digital connectors.'
+      - The problem of electromigration in microscopic computer chips.
+      - 'Solders: the transition from Lead-Tin to RoHS compliant alloys.'
+      - 'Thermal management: metals as heat sinks in computing.'
+      - 'Superconductors: the quest for zero resistance at room temperature.'
+    - name: 'The Criticals: Rare Earths and Technology'
+      bullet_points:
+      - 'Defining Rare Earth Elements (REEs): Lanthanides plus Scandium and Yttrium.'
+      - 'The myth of scarcity: why they are ''rare'' (dispersed) but not uncommon.'
+      - 'Neodymium and Samarium: the magnets that power EV motors and wind turbines.'
+      - 'Lithium and Cobalt: the chemistry of modern energy storage.'
+      - 'Tantalum and capacitors: the conflict minerals in our pockets.'
+      - The complex, toxic processing required to separate REEs.
+      - Geopolitical dominance and supply chain vulnerabilities.
+      - 'Indium and Gallium: the transparent metals in touch screens and LEDs.'
+    - name: Metals in Life and Medicine
+      bullet_points:
+      - 'Essential bulk metals in biology: Calcium, Potassium, and Sodium.'
+      - 'Trace metals: Iron in hemoglobin and Zinc in enzymes.'
+      - 'Heavy metal toxicity: how Lead and Mercury disrupt biological functions.'
+      - Titanium and Stainless Steel in surgical implants and prosthetics.
+      - Shape memory alloys (Nitinol) in stents and medical devices.
+      - Platinum and Gold compounds in modern chemotherapy.
+      - Antimicrobial properties of Copper and Silver surfaces.
+      - Radioactive isotopes (Technetium) in medical imaging.
+  - name: The Future of the Forge
+    sections:
+    - name: The Scarcity Crisis and Peak Metal
+      bullet_points:
+      - Analyzing the difference between 'Reserves' and 'Resources'.
+      - 'The concept of ''Peak Metal'': have we mined the easy stuff?'
+      - Declining ore grades and the increasing energy cost of extraction.
+      - 'Environmental impacts: strip mining, tailings dams, and acid mine drainage.'
+      - Water usage and pollution in metal processing.
+      - The socio-economic impact of mining on local communities.
+      - Strategic stockpiles and national security concerns.
+      - The imperative for sustainable mining practices.
+    - name: 'The Circular Economy: Urban Mining'
+      bullet_points:
+      - 'The current state of metal recycling: successes (Steel) vs. failures (REEs).'
+      - 'The concept of ''Urban Mining'': extracting value from e-waste.'
+      - Technical challenges in separating complex alloys and electronics.
+      - 'Design for disassembly: changing how we build products.'
+      - The economics of recycling versus virgin ore extraction.
+      - 'Hydrometallurgy and bio-leaching: greener ways to recover metals.'
+      - The role of legislation and extended producer responsibility.
+      - 'Closing the loop: moving towards a zero-waste metal economy.'
+    - name: 'Printing the Future: Additive Manufacturing'
+      bullet_points:
+      - Introduction to 3D printing with metal powders (sintering and melting).
+      - Reducing material waste compared to subtractive manufacturing.
+      - Creating complex internal geometries impossible with casting.
+      - 'Generative design: AI-driven structures that mimic organic bone.'
+      - 'Supply chain disruption: printing parts on-demand locally.'
+      - 'Applications in aerospace: lighter parts saving fuel.'
+      - Customized medical implants tailored to individual patient scans.
+      - Challenges in quality control and grain structure consistency.
+    - name: 'New Frontiers: Asteroids and Superalloys'
+      bullet_points:
+      - 'High-Entropy Alloys: mixing 5+ metals to break traditional rules.'
+      - 'Bulk Metallic Glasses: amorphous metals with incredible resilience.'
+      - The theoretical potential of Metallic Hydrogen.
+      - 'Deep-sea mining: polymetallic nodules and the ecological risks.'
+      - 'Asteroid mining: the economic potential of Psyche and near-earth objects.'
+      - Technological hurdles of mining in zero gravity.
+      - 'Space law: who owns the metals of the solar system?'
+      - 'Final reflections: stewardship of non-renewable resources.'

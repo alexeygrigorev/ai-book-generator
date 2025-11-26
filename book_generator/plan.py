@@ -20,6 +20,8 @@ to make sure the output is comprehensive.
 The language of the output should match the language of the input.
 
 Do not add numbers to chapter and section names. It will be added later automatically.
+
+IMPORTANT: Generate a 'slug' field that is a filesystem-safe version of the book name (lowercase, hyphens instead of spaces, max 50 chars, no special characters except hyphens).
 """
 
 
@@ -43,14 +45,20 @@ Please provide a comprehensive book outline including parts (if applicable), cha
     )
 
     full_text = ""
+    last_chunk = None
     for chunk in response:
+        last_chunk = chunk
         if chunk.text:
             full_text += chunk.text
             yield chunk.text
 
-    # Get usage from last chunk (response object has final usage_metadata after iteration)
-    cost_report = calculate_gemini_3_cost(response.usage_metadata)
-    yield ("__DONE__", full_text, cost_report.total_cost)
+    # Get usage from the last chunk
+    if last_chunk and hasattr(last_chunk, "usage_metadata"):
+        cost_report = calculate_gemini_3_cost(last_chunk.usage_metadata)
+        yield ("__DONE__", full_text, cost_report.total_cost)
+    else:
+        # Fallback if no usage metadata
+        yield ("__DONE__", full_text, 0.0)
 
 
 def refine_text_plan_stream(current_plan: str, feedback: str):
@@ -74,13 +82,20 @@ Please provide the updated plan."""
     )
 
     full_text = ""
+    last_chunk = None
     for chunk in response:
+        last_chunk = chunk
         if chunk.text:
             full_text += chunk.text
             yield chunk.text
 
-    cost_report = calculate_gemini_3_cost(response.usage_metadata)
-    yield ("__DONE__", full_text, cost_report.total_cost)
+    # Get usage from the last chunk
+    if last_chunk and hasattr(last_chunk, "usage_metadata"):
+        cost_report = calculate_gemini_3_cost(last_chunk.usage_metadata)
+        yield ("__DONE__", full_text, cost_report.total_cost)
+    else:
+        # Fallback if no usage metadata
+        yield ("__DONE__", full_text, 0.0)
 
 
 def create_book_plan(prompt):

@@ -8,6 +8,7 @@ dependencies = [
     "boto3>=1.41.4",
     "google-genai>=1.52.0",
     "openai>=2.8.1",
+    "streamlit>=1.51.0",
     "toyaikit>=0.0.8",
 ]
 
