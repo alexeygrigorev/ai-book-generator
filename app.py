@@ -6,14 +6,7 @@ st.set_page_config(page_title="AI Book Generator", layout="wide")
 st.title("AI Book Generator Planner")
 
 # Session state
-for key, default in [
-    ("text_plan", None),
-    ("structured_plan", None),
-    ("messages", []),
-    ("config", {}),
-    ("total_cost", 0.0),
-    ("generating", False)
-]:
+for key, default in [("text_plan", None), ("structured_plan", None), ("messages", []), ("config", {}), ("total_cost", 0.0), ("generating", False)]:
     if key not in st.session_state:
         st.session_state[key] = default
 
@@ -40,6 +33,19 @@ if st.session_state.generating:
     
     try:
         full_text = ""
+        for chunk in generate_text_plan_stream(st.session_state.config["topic"], st.session_state.config["size"]):
+            if isinstance(chunk, tuple) and chunk[0] == "__DONE__":
+                _,final_text, cost = chunk
+                st.session_state.total_cost += cost
+                st.session_state.text_plan = final_text
+                st.session_state.messages = [{"role": "assistant", "content": f"Here's the initial plan:\n\n{final_text}\n\nFeel free to ask me to make changes!"}]
+                st.session_state.generating = False
+                st.rerun()
+            else:
+                full_text += chunk
+                placeholder.markdown(full_text)
+    except Exception as e:
+        st.error(f"Error: {e}")
         import traceback
         st.code(traceback.format_exc())
         st.session_state.generating = False
@@ -69,7 +75,8 @@ elif st.session_state.text_plan:
                             st.session_state.text_plan = final_text
                             st.session_state.messages.append({"role": "assistant", "content": f"Updated:\n\n{final_text}"})
                             placeholder.markdown(f"Updated:\n\n{final_text}")
-                            import time; time.sleep(0.5)
+                            import time
+                            time.sleep(0.5)
                             st.rerun()
                         else:
                             full_text += chunk
