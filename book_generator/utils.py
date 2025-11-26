@@ -4,12 +4,34 @@ from google import genai
 from google.genai import types
 
 
+import os
+
 # Initialize the client
 _client = None
+
+def _load_key_from_dot_envrc():
+    # Load .envrc if it exists
+    if not os.path.exists(".envrc"):
+        return
+
+    with open(".envrc", "r") as f:
+        for line in f:
+            if line.startswith("export GEMINI_API_KEY="):
+                key = line.strip().split("=")[1]
+                # Remove quotes if present
+                if key.startswith('"') and key.endswith('"'):
+                    key = key[1:-1]
+                if key.startswith("'") and key.endswith("'"):
+                    key = key[1:-1]
+                os.environ["GEMINI_API_KEY"] = key
+                break
 
 def get_client():
     global _client
     if _client is None:
+        if "GEMINI_API_KEY" not in os.environ:
+            _load_key_from_dot_envrc()
+
         _client = genai.Client()
     return _client
 
@@ -78,6 +100,44 @@ def calculate_gemini_3_cost(usage_metadata, print_cost=False) -> CostReport:
         output_tokens=total_output_tokens,
         tier_name=tier_name
     )
+
+
+def calculate_tts_cost(usage_metadata, is_batch=False, print_cost=False) -> float:
+    """
+    Calculates cost for Gemini TTS based on usage metadata.
+    
+    Pricing (Nov 2025 Rates per 1M tokens):
+    Standard: Input $0.50, Output (Audio) $10.00
+    Batch:    Input $0.25, Output (Audio) $5.00
+    """
+    # Extract token counts
+    def get_val(data, attr):
+        return getattr(data, attr, data.get(attr, 0)) if hasattr(data, 'get') else getattr(data, attr, 0)
+
+    prompt_tokens = get_val(usage_metadata, 'prompt_token_count')
+    candidates_tokens = get_val(usage_metadata, 'candidates_token_count')
+    
+    if is_batch:
+        input_rate = 0.25
+        output_rate = 5.00
+        mode = "Batch"
+    else:
+        input_rate = 0.50
+        output_rate = 10.00
+        mode = "Standard"
+
+    input_cost = (prompt_tokens / 1_000_000) * input_rate
+    output_cost = (candidates_tokens / 1_000_000) * output_rate
+    total_cost = input_cost + output_cost
+
+    if print_cost:
+        print(f"--- Gemini TTS Cost Report ({mode}) ---")
+        print(f"Prompt Tokens:   {prompt_tokens:,}  (@ ${input_rate}/1M)")
+        print(f"Output Tokens:   {candidates_tokens:,}  (@ ${output_rate}/1M)")
+        print(f"TOTAL COST:      ${total_cost:.6f}")
+        print(f"-----------------------------------")
+
+    return total_cost
 
 def llm(instructions, prompt, model="models/gemini-3-pro-preview"):
     client = get_client()
