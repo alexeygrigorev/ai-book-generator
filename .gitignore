@@ -4,3 +4,4 @@ __pycache__
 audio/
 .venv
 *.epub
+*.pdf

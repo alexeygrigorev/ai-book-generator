@@ -1,11 +1,25 @@
-import os
+"""
+Generate Amazon KDP interior PDF using Docker.
+
+Creates a print-ready PDF with:
+- 6x9 inch page size
+- Mirror margins (gutter)
+- Proper typography (XeLaTeX + DejaVu fonts)
+- Table of Contents
+- Aggregated markdown content
+
+Usage:
+    uv run python create_kdp_interior.py book_folder_name
+"""
+
 import sys
+import os
 import yaml
 import subprocess
-import re
 from pathlib import Path
+import re
 
-import questionary
+DOCKER_IMAGE_NAME = "kdp-generator"
 
 
 def load_plan(book_dir):
@@ -21,12 +35,9 @@ def load_plan(book_dir):
 def shift_headers(content, shift_by):
     """
     Shifts markdown headers by a specified amount.
-    e.g. if shift_by is 1, # becomes ##, ## becomes ###
     """
     lines = content.split("\n")
     new_lines = []
-    # Regex to match markdown headers (at start of line)
-    # We only shift headers that are 1-6 hashes long
     header_regex = re.compile(r"^(#{1,6})\s+(.*)")
 
     for line in lines:
@@ -59,10 +70,6 @@ def get_sorted_files(part_dir):
 
 def collect_markdown_content(book_dir):
     full_content = []
-
-    # 1. Add Title Page info (optional, pandoc handles metadata, but good to have in text)
-    # We'll skip explicit title page in markdown and let pandoc metadata handle it.
-
     parts = get_sorted_parts(book_dir)
 
     for part_name in parts:
@@ -75,7 +82,6 @@ def collect_markdown_content(book_dir):
         if part_intro_path.exists():
             with open(part_intro_path, "r", encoding="utf-8") as f:
                 content = f.read()
-                # Part intro is usually H1 (# Часть X...), keep it as H1
                 full_content.append(content)
                 full_content.append("\n\n")
 
@@ -87,14 +93,10 @@ def collect_markdown_content(book_dir):
                 content = f.read()
 
             if filename.endswith("_00_intro.md"):
-                # Chapter Intro. Currently H1 (# 1. Chapter...).
-                # We want it to be H2 to sit under Part (H1).
-                # Shift by 1.
+                # Chapter Intro: Shift H1 -> H2
                 content = shift_headers(content, 1)
             else:
-                # Section. Currently H2 (## Section...).
-                # We want it to be H3.
-                # Shift by 1.
+                # Section: Shift H2 -> H3
                 content = shift_headers(content, 1)
 
             full_content.append(content)
@@ -103,62 +105,53 @@ def collect_markdown_content(book_dir):
     return "".join(full_content)
 
 
-def list_available_book_folders(books_root: Path) -> list[Path]:
-    """Returns book folders that have a plan."""
-    if not books_root.exists():
-        return []
-
-    available = []
-    for folder in sorted(books_root.iterdir()):
-        if not folder.is_dir():
-            continue
-
-        if (folder / "plan.yaml").exists():
-            available.append(folder)
-    return available
-
-
-def prompt_for_book_selection(plan_folders: list[Path]) -> str | None:
-    """Prompts the user to select a book folder."""
-    if not plan_folders:
-        print("No available books found in books/.")
-        return None
-
-    return questionary.select(
-        "Select a book to convert to EPUB",
-        choices=[
-            questionary.Choice(title=folder.name, value=folder.name)
-            for folder in plan_folders
-        ],
-        default=plan_folders[0].name,
-    ).ask()
+def build_docker_image():
+    """Builds the Docker image if it doesn't exist."""
+    print("Checking Docker image...")
+    try:
+        subprocess.run(
+            ["docker", "inspect", DOCKER_IMAGE_NAME],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        print(f"Docker image '{DOCKER_IMAGE_NAME}' already exists.")
+    except subprocess.CalledProcessError:
+        print(f"Building Docker image '{DOCKER_IMAGE_NAME}'...")
+        try:
+            subprocess.run(
+                ["docker", "build", "-t", DOCKER_IMAGE_NAME, "."],
+                check=True,
+                cwd=Path(__file__).parent,
+            )
+            print("Docker image built successfully.")
+        except subprocess.CalledProcessError as e:
+            print(f"Error building Docker image: {e}")
+            sys.exit(1)
 
 
 def main():
+    if len(sys.argv) < 2:
+        print("Usage: python create_kdp_interior.py <book_folder_name>")
+        sys.exit(1)
+
+    book_name = sys.argv[1]
     base_dir = Path(__file__).parent
-    books_root = base_dir / "books"
-
-    if len(sys.argv) >= 2:
-        book_name = sys.argv[1]
-    else:
-        plan_folders = list_available_book_folders(books_root)
-        selected = prompt_for_book_selection(plan_folders)
-        if not selected:
-            sys.exit(0)
-        book_name = selected
-
-    book_dir = books_root / book_name
+    book_dir = base_dir / "books" / book_name
 
     if not book_dir.exists():
         print(f"Error: Book directory {book_dir} does not exist.")
         sys.exit(1)
+
+    # Ensure Docker image is ready
+    build_docker_image()
+
     print(f"Processing book: {book_name}")
 
     # Load Metadata
     plan = load_plan(book_dir)
     title = plan.get("name", "Untitled Book")
     language = plan.get("book_language", "en")
-    # Author is not in plan.yaml usually, defaulting to "AI Author" or checking if it's there
     author = plan.get("author", "A.I. Grigorev")
 
     # Collect Content
@@ -166,58 +159,75 @@ def main():
     markdown_content = collect_markdown_content(book_dir)
 
     # Save temporary combined markdown
-    temp_md_path = book_dir / f"{book_name}_combined.md"
+    temp_md_filename = f"{book_name}_interior.md"
+    temp_md_path = book_dir / temp_md_filename
     with open(temp_md_path, "w", encoding="utf-8") as f:
         f.write(markdown_content)
 
-    # Output EPUB path
-    output_epub = book_dir / f"{book_name}.epub"
+    # Output PDF filename
+    output_pdf_filename = "kdp_interior.pdf"
+    output_pdf_path = book_dir / output_pdf_filename
 
-    # Build Pandoc Command
-    # --toc: Table of Contents
-    # --metadata: Set metadata fields
-    # --top-level-division=part: Helps pandoc understand the structure (though we manually shifted headers)
+    # Docker Command
+    # We mount the 'books' directory to /data in the container
+    # So inside container: /data/book_name/file.md
+
+    books_root_abs = (base_dir / "books").resolve()
+    container_book_dir = f"/data/{book_name}"
+
     cmd = [
-        "pandoc",
-        str(temp_md_path),
+        "docker",
+        "run",
+        "--rm",
+        "-v",
+        f"{books_root_abs}:/data",
+        DOCKER_IMAGE_NAME,
+        f"{container_book_dir}/{temp_md_filename}",
         "-o",
-        str(output_epub),
+        f"{container_book_dir}/{output_pdf_filename}",
+        "--pdf-engine=xelatex",
         "--toc",
         f"--metadata=title:{title}",
         f"--metadata=author:{author}",
         f"--metadata=lang:{language}",
         "--top-level-division=part",
+        # KDP 6x9" Geometry
+        "-V",
+        "geometry:paperwidth=6in",
+        "-V",
+        "geometry:paperheight=9in",
+        "-V",
+        "geometry:margin=0.75in",
+        "-V",
+        "geometry:inner=0.75in",  # Gutter
+        "-V",
+        "geometry:outer=0.5in",
+        "-V",
+        "geometry:top=0.75in",
+        "-V",
+        "geometry:bottom=0.75in",
+        # Fonts
+        "-V",
+        "mainfont=DejaVu Serif",
+        "-V",
+        "sansfont=DejaVu Sans",
+        "-V",
+        "monofont=DejaVu Sans Mono",
+        "-V",
+        "documentclass=book",
     ]
 
-    # Add cover if exists (supports jpg, jpeg, and png extensions)
-    cover_extensions = [".jpg", ".jpeg", ".png"]
-    cover_path = None
-    for ext in cover_extensions:
-        potential_cover = book_dir / f"cover{ext}"
-        if potential_cover.exists():
-            cover_path = potential_cover
-            break
-
-    if cover_path:
-        cmd.append(f"--epub-cover-image={cover_path}")
-        print(f"Using cover image: {cover_path.name}")
-
-    # Print command safely (handling non-ASCII characters in Windows console)
-    print(f"Running pandoc to create {output_epub.name}...")
-
+    print(f"Running Docker to generate PDF...")
     try:
         subprocess.run(cmd, check=True)
-        print(f"Successfully created: {output_epub}")
+        print(f"[OK] KDP interior PDF generated: {output_pdf_path}")
     except subprocess.CalledProcessError as e:
-        print(f"Error running pandoc: {e}")
+        print(f"Error running Docker command: {e}")
         sys.exit(1)
-    except FileNotFoundError:
-        print("Error: pandoc not found. Please install pandoc.")
-        sys.exit(1)
-
-    # Cleanup temp file
-    if temp_md_path.exists():
-        os.remove(temp_md_path)
+    finally:
+        # Cleanup
+        if temp_md_path.exists():
+            os.remove(temp_md_path)
 
 
 if __name__ == "__main__":

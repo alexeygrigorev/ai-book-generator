@@ -10,21 +10,22 @@ from book_generator.models import BookPlan, ChapterSpecs, BookSectionPlan
 from book_generator.utils import llm, calculate_gemini_3_cost
 
 
-def get_part_label(language: Literal['ru', 'en', 'de']) -> str:
+def get_part_label(language: Literal["ru", "en", "de"]) -> str:
     """Returns the localized label for 'Part' based on the book language.
-    
+
     Args:
         language: The book language code ('ru', 'en', or 'de')
-        
+
     Returns:
         The localized word for 'Part' in the specified language
     """
     labels = {
-        'en': 'Part',
-        'ru': 'Часть',
-        'de': 'Teil'
+        "en": "Part",
+        "ru": "Часть",
+        "de": "Teil",
     }
-    return labels.get(language, 'Part')
+    return labels.get(language, "Part")
+
 
 writer_instructions = """
 Your task is based on the plan write a book section. 
@@ -128,40 +129,16 @@ def prompt_for_plan_selection(plan_folders: List[Path]) -> Optional[str]:
         print("No available plans found in books/.")
         return None
 
-    # Use a nicer selector when questionary is available
-    if questionary:
-        try:
-            choice = questionary.select(
-                "Select a plan to execute",
-                choices=[questionary.Choice(title=folder.name, value=folder.name) for folder in plan_folders],
-                default=plan_folders[0].name,
-            ).ask()
-        except KeyboardInterrupt:
-            return None
-        return choice
+    choice = questionary.select(
+        "Select a plan to execute",
+        choices=[
+            questionary.Choice(title=folder.name, value=folder.name)
+            for folder in plan_folders
+        ],
+        default=plan_folders[0].name,
+    ).ask()
 
-    # Fallback to plain input
-    print("Available plans:")
-    for idx, folder in enumerate(plan_folders, start=1):
-        print(f"  {idx}. {folder.name}")
-
-    while True:
-        choice = input(
-            f"Select a plan to execute [1-{len(plan_folders)}] (default 1): "
-        ).strip()
-
-        if not choice:
-            return plan_folders[0].name
-
-        if not choice.isdigit():
-            print("Please enter a number.")
-            continue
-
-        selection = int(choice)
-        if 1 <= selection <= len(plan_folders):
-            return plan_folders[selection - 1].name
-
-        print(f"Please enter a number between 1 and {len(plan_folders)}.")
+    return choice
 
 
 class ContentWriter:
@@ -227,7 +204,11 @@ class FileSystemWriter(ContentWriter):
         )
 
     def _get_part_intro_path(self, part_number: int) -> Path:
-        return self.root_folder / f"part_{part_number:02d}" / "_part_intro.md"
+        return (
+            self.root_folder
+            / f"part_{part_number:02d}"
+            / f"_part_{part_number:02d}_intro.md"
+        )
 
     def _get_back_cover_path(self) -> Path:
         return self.root_folder / "back_cover.md"
@@ -323,7 +304,7 @@ class BookExecutor:
         if self.writer.intro_exists(
             current_spec.part_number, current_spec.chapter_number
         ):
-            print(f"  Intro already exists, skipping.")
+            print("  Intro already exists, skipping.")
             return
 
         chapter_overview = yaml.safe_dump(
@@ -363,7 +344,7 @@ class BookExecutor:
             return
 
         sections_completed = current_spec.sections[:i]
-        sections_todo = current_spec.sections[i+1:]
+        sections_todo = current_spec.sections[i + 1 :]
 
         chapter_progress = show_progress(
             sections_completed,
@@ -376,11 +357,7 @@ class BookExecutor:
             current_section, current_spec, chapter_progress, book_progress
         )
 
-        full_section_text = (
-            f"## {current_section.name}"
-            "\n\n"
-            f"{section_content}"
-        ).strip()
+        full_section_text = (f"## {current_section.name}\n\n{section_content}").strip()
 
         self.writer.save_section(
             current_spec.part_number,
@@ -463,7 +440,9 @@ class BookExecutor:
 
             print(f"Saving Part {part_number} intro...")
             part_label = get_part_label(self.book_plan.book_language)
-            content = f"# {part_label} {part_number}: {part.name}\n\n{part.introduction}"
+            content = (
+                f"# {part_label} {part_number}: {part.name}\n\n{part.introduction}"
+            )
             self.writer.save_part_intro(part_number, content)
 
     def _process_all_chapters(self, chapter_specs: List[ChapterSpecs]):
