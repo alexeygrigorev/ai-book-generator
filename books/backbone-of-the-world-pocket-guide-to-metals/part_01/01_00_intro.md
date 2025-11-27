@@ -1,0 +1,3 @@
+# 1. Elemental Foundations
+
+This chapter explores the fundamental nature of metals, starting with the sea of delocalized electrons that gives them their unique conductivity and ductility. We will navigate the periodic table to distinguish between reactive alkali metals and stable noble elements, while also uncovering their cosmic origins in stellar forges. Finally, we examine the chemical battle between the enduring shine of gold and the inevitable rust of iron, revealing the thermodynamic forces that drive metals back to their natural ore state.

@@ -5,6 +5,8 @@ import subprocess
 import re
 from pathlib import Path
 
+import questionary
+
 def load_plan(book_dir):
     plan_path = book_dir / "plan.yaml"
     if not plan_path.exists():
@@ -93,19 +95,52 @@ def collect_markdown_content(book_dir):
             
     return "".join(full_content)
 
+def list_available_book_folders(books_root: Path) -> list[Path]:
+    """Returns book folders that have a plan."""
+    if not books_root.exists():
+        return []
+
+    available = []
+    for folder in sorted(books_root.iterdir()):
+        if not folder.is_dir():
+            continue
+
+        if (folder / "plan.yaml").exists():
+            available.append(folder)
+    return available
+
+
+def prompt_for_book_selection(plan_folders: list[Path]) -> str | None:
+    """Prompts the user to select a book folder."""
+    if not plan_folders:
+        print("No available books found in books/.")
+        return None
+
+    return questionary.select(
+        "Select a book to convert to EPUB",
+        choices=[questionary.Choice(title=folder.name, value=folder.name) for folder in plan_folders],
+        default=plan_folders[0].name,
+    ).ask()
+
+
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python convert_to_ebook.py <book_name>")
-        sys.exit(1)
-        
-    book_name = sys.argv[1]
     base_dir = Path(__file__).parent
-    book_dir = base_dir / "books" / book_name
-    
+    books_root = base_dir / "books"
+
+    if len(sys.argv) >= 2:
+        book_name = sys.argv[1]
+    else:
+        plan_folders = list_available_book_folders(books_root)
+        selected = prompt_for_book_selection(plan_folders)
+        if not selected:
+            sys.exit(0)
+        book_name = selected
+
+    book_dir = books_root / book_name
+
     if not book_dir.exists():
         print(f"Error: Book directory {book_dir} does not exist.")
         sys.exit(1)
-        
     print(f"Processing book: {book_name}")
     
     # Load Metadata
@@ -141,7 +176,7 @@ def main():
         f"--metadata=lang:{language}",
         "--top-level-division=part"
     ]
-    
+
     # Add cover if exists (optional, not implemented yet but good to have placeholder)
     # if (book_dir / "cover.jpg").exists():
     #     cmd.append(f"--epub-cover-image={book_dir / 'cover.jpg'}")

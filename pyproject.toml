@@ -9,6 +9,7 @@ dependencies = [
     "google-genai>=1.52.0",
     "openai>=2.8.1",
     "streamlit>=1.51.0",
+    "questionary>=2.0.0",
     "toyaikit>=0.0.8",
 ]
 

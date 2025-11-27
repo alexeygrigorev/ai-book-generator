@@ -1,0 +1,3 @@
+# 2. From Stone to Steel
+
+This chapter traces the evolution of human civilization through the lens of metallurgy, beginning with the transition from stone tools to the strategic alloys of the Bronze Age. We will examine the economic revolution brought by coinage and the mystical roots of alchemy before exploring the widespread adoption of iron. Finally, the discussion moves to the industrial advancements of the Bessemer process and the extraction of aluminum, revealing how these materials constructed our modern world.

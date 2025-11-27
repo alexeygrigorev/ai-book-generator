@@ -1,0 +1,3 @@
+# 4. The Future of the Forge
+
+This chapter explores the critical challenges and revolutionary innovations shaping the future of metallurgy. We begin by analyzing the looming scarcity crisis and the urgent need for sustainable extraction practices. The discussion then shifts to the circular economy, highlighting urban mining and recycling, before examining transformative technologies like additive manufacturing. Finally, we investigate advanced superalloys and the ambitious frontiers of deep-sea and asteroid mining to secure our metallic future.

@@ -1,6 +1,10 @@
+import sys
 import yaml
 from pathlib import Path
-from typing import List, Callable, Any, Literal
+from typing import List, Callable, Any, Literal, Optional
+
+import questionary
+
 from tqdm.auto import tqdm
 from book_generator.models import BookPlan, ChapterSpecs, BookSectionPlan
 from book_generator.utils import llm, calculate_gemini_3_cost
@@ -93,6 +97,71 @@ def show_progress(
     progress = "\n".join(progress_builder)
 
     return progress
+
+
+def list_available_plan_folders() -> List[Path]:
+    """Returns plan folders under books/ that are not marked as ready."""
+    books_root = Path("books")
+    if not books_root.exists():
+        return []
+
+    available = []
+    for folder in sorted(books_root.iterdir()):
+        if not folder.is_dir():
+            continue
+
+        plan_file = folder / "plan.yaml"
+        ready_flag = folder / "_ready"
+
+        if ready_flag.exists():
+            continue
+
+        if plan_file.exists():
+            available.append(folder)
+
+    return available
+
+
+def prompt_for_plan_selection(plan_folders: List[Path]) -> Optional[str]:
+    """Prompts the user to select a plan folder using Questionary if available."""
+    if not plan_folders:
+        print("No available plans found in books/.")
+        return None
+
+    # Use a nicer selector when questionary is available
+    if questionary:
+        try:
+            choice = questionary.select(
+                "Select a plan to execute",
+                choices=[questionary.Choice(title=folder.name, value=folder.name) for folder in plan_folders],
+                default=plan_folders[0].name,
+            ).ask()
+        except KeyboardInterrupt:
+            return None
+        return choice
+
+    # Fallback to plain input
+    print("Available plans:")
+    for idx, folder in enumerate(plan_folders, start=1):
+        print(f"  {idx}. {folder.name}")
+
+    while True:
+        choice = input(
+            f"Select a plan to execute [1-{len(plan_folders)}] (default 1): "
+        ).strip()
+
+        if not choice:
+            return plan_folders[0].name
+
+        if not choice.isdigit():
+            print("Please enter a number.")
+            continue
+
+        selection = int(choice)
+        if 1 <= selection <= len(plan_folders):
+            return plan_folders[selection - 1].name
+
+        print(f"Please enter a number between 1 and {len(plan_folders)}.")
 
 
 class ContentWriter:
@@ -421,6 +490,11 @@ def execute_plan(folder: str):
     root_folder = Path("books") / folder
     plan_yaml = root_folder / "plan.yaml"
 
+    ready_flag = root_folder / "_ready"
+    if ready_flag.exists():
+        print(f"Book '{folder}' is marked as ready (found {ready_flag}). Skipping.")
+        return
+
     if not plan_yaml.exists():
         print(f"Plan file not found at {plan_yaml}. Please run plan.py first.")
         return
@@ -436,4 +510,10 @@ def execute_plan(folder: str):
 
 
 if __name__ == "__main__":
-    execute_plan("sirens")
+    if len(sys.argv) > 1:
+        execute_plan(sys.argv[1])
+    else:
+        available_plans = list_available_plan_folders()
+        selected_plan = prompt_for_plan_selection(available_plans)
+        if selected_plan:
+            execute_plan(selected_plan)

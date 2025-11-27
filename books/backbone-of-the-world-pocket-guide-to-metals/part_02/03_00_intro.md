@@ -1,0 +1,3 @@
+# 3. The Invisible Skeleton
+
+"The Invisible Skeleton" reveals the indispensable metallic framework supporting modern life, from the soaring steel of skyscrapers to the microscopic circuitry of digital devices. This chapter examines the structural titans like iron and titanium before analyzing the conductive elements that power our global grid. We will also investigate the complex geopolitics of rare earth minerals essential for green technology and explore the biological significance of metals in human health and medicine.
