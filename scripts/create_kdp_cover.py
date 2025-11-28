@@ -31,7 +31,9 @@ class KDPCoverGenerator:
             page_count: Total page count for spine width calculation
         """
         self.book_folder = book_folder
-        self.book_path = Path("books") / book_folder
+        # Get project root (parent of scripts directory)
+        project_root = Path(__file__).parent.parent
+        self.book_path = project_root / "books" / book_folder
         self.page_count = page_count
 
         # Register Unicode fonts for Cyrillic support
@@ -140,9 +142,17 @@ class KDPCoverGenerator:
             x: X position of back cover area
             y: Y position of back cover area
         """
-        # Background color
+        # Background color - extend into bleed area
+        # Extend left to edge (x - bleed), top/bottom to edges
         c.setFillColor(HexColor("#1a1a2e"))
-        c.rect(x, y, self.trim_width, self.trim_height, fill=1, stroke=0)
+        c.rect(
+            x - self.bleed,  # Extend left into bleed
+            y - self.bleed,  # Extend bottom into bleed
+            self.trim_width + self.bleed,  # Extend right to trim line
+            self.trim_height + 2 * self.bleed,  # Extend top and bottom
+            fill=1,
+            stroke=0,
+        )
 
         # Get back cover text
         back_text = self._get_back_cover_text()
@@ -221,12 +231,13 @@ class KDPCoverGenerator:
             # Use existing cover image
             try:
                 img = ImageReader(str(cover_image))
+                # Extend image into bleed area on all sides
                 c.drawImage(
                     img,
-                    x,
-                    y,
-                    width=self.trim_width,
-                    height=self.trim_height,
+                    x,  # Start at trim line (no left bleed for front)
+                    y - self.bleed,  # Extend bottom into bleed
+                    width=self.trim_width + self.bleed,  # Extend right into bleed
+                    height=self.trim_height + 2 * self.bleed,  # Extend top and bottom
                     preserveAspectRatio=False,
                 )
             except Exception as e:
@@ -238,13 +249,27 @@ class KDPCoverGenerator:
 
     def _draw_generated_front_cover(self, c: canvas.Canvas, x: float, y: float):
         """Generate a simple front cover design."""
-        # Background gradient (simulated with rectangles)
+        # Background gradient (simulated with rectangles) - extend into bleed
         c.setFillColor(HexColor("#0f3460"))
-        c.rect(x, y, self.trim_width, self.trim_height, fill=1, stroke=0)
+        c.rect(
+            x,  # Start at trim line
+            y - self.bleed,  # Extend bottom into bleed
+            self.trim_width + self.bleed,  # Extend right into bleed
+            self.trim_height + 2 * self.bleed,  # Extend top and bottom
+            fill=1,
+            stroke=0,
+        )
 
-        # Accent color overlay
+        # Accent color overlay - extend into bleed
         c.setFillColorRGB(0.91, 0.27, 0.38, alpha=0.3)
-        c.rect(x, y, self.trim_width, self.trim_height / 2, fill=1, stroke=0)
+        c.rect(
+            x,
+            y - self.bleed,
+            self.trim_width + self.bleed,
+            (self.trim_height + 2 * self.bleed) / 2,
+            fill=1,
+            stroke=0,
+        )
 
         # Book title
         book_title = self.metadata.get("name", "Book Title")
@@ -276,9 +301,16 @@ class KDPCoverGenerator:
             x: X position of spine area
             y: Y position of spine area
         """
-        # Background
+        # Background - extend into top/bottom bleed
         c.setFillColor(HexColor("#16213e"))
-        c.rect(x, y, self.spine_width, self.trim_height, fill=1, stroke=0)
+        c.rect(
+            x,
+            y - self.bleed,  # Extend bottom into bleed
+            self.spine_width,
+            self.trim_height + 2 * self.bleed,  # Extend top and bottom
+            fill=1,
+            stroke=0,
+        )
 
         # Title on spine (rotated)
         book_title = self.metadata.get("name", "Book Title")
@@ -336,9 +368,16 @@ class KDPCoverGenerator:
         # Draw spine (MIDDLE) - always draw background, conditionally draw text
         spine_x = start_x + self.trim_width
 
-        # Draw spine background
+        # Draw spine background - extend into top/bottom bleed
         c.setFillColor(HexColor("#16213e"))
-        c.rect(spine_x, start_y, self.spine_width, self.trim_height, fill=1, stroke=0)
+        c.rect(
+            spine_x,
+            start_y - self.bleed,  # Extend bottom into bleed
+            self.spine_width,
+            self.trim_height + 2 * self.bleed,  # Extend top and bottom
+            fill=1,
+            stroke=0,
+        )
 
         if draw_spine_text:
             self._draw_spine(c, spine_x, start_y)
