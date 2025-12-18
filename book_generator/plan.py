@@ -1,3 +1,6 @@
+import argparse
+from pathlib import Path
+
 import yaml
 
 from google.genai import types
@@ -118,9 +121,19 @@ def create_book_plan(prompt):
     return book_plan, cost_report.total_cost
 
 
-def save_plan(book_plan, folder_path):
+def save_plan(book_plan, destination):
+    """
+    Save the book plan to YAML. Destination can be a directory or a file path.
+    """
+    destination_path = Path(destination)
+    if destination_path.suffix:
+        folder_path = destination_path.parent
+        plan_yaml = destination_path
+    else:
+        folder_path = destination_path
+        plan_yaml = folder_path / "plan.yaml"
+
     folder_path.mkdir(parents=True, exist_ok=True)
-    plan_yaml = folder_path / "plan.yaml"
 
     with plan_yaml.open("wt", encoding="utf-8") as f_out:
         yaml.safe_dump(
@@ -128,3 +141,44 @@ def save_plan(book_plan, folder_path):
         )
     print(f"Plan saved to {plan_yaml}")
     return plan_yaml
+
+
+def main():
+    """
+    uv run python -m book_generator.plan \
+      --prompt-file books/fireworks-ru/input.txt \
+      --output books/fireworks-ru/plan.yaml
+    """
+    parser = argparse.ArgumentParser(
+        description="Generate a structured book plan from a prompt file."
+    )
+    parser.add_argument(
+        "-p",
+        "--prompt-file",
+        required=True,
+        type=Path,
+        help="Path to a text file containing the plan prompt/conversation.",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        help=(
+            "Path to save the plan. Can be a directory or a file path. "
+            "Defaults to books/<slug>/plan.yaml."
+        ),
+    )
+    args = parser.parse_args()
+
+    prompt_text = args.prompt_file.read_text(encoding="utf-8")
+    book_plan, total_cost = create_book_plan(prompt_text)
+
+    destination = args.output if args.output else Path("books") / book_plan.slug
+    plan_path = save_plan(book_plan, destination)
+
+    print(f"Total cost: ${total_cost:.6f}")
+    print(f"Plan written to {plan_path}")
+
+
+if __name__ == "__main__":
+    main()
