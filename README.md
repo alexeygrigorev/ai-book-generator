@@ -198,7 +198,9 @@ Features:
 make kdp-cover BOOK=sirens
 
 # Direct
-python scripts/create_kdp_cover.py sirens
+uv run python scripts/create_kdp_cover.py sirens
+
+uv run python scripts/create_kdp_cover.py metals-pocketbook  --pages 80
 ```
 
 **Arguments**:

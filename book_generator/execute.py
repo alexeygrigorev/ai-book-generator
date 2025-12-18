@@ -5,7 +5,6 @@ from typing import List, Callable, Any, Literal, Optional
 
 import questionary
 
-from tqdm.auto import tqdm
 from book_generator.models import BookPlan, ChapterSpecs, BookSectionPlan
 from book_generator.utils import llm, calculate_gemini_3_cost
 
