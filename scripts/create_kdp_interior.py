@@ -136,7 +136,7 @@ def main():
         sys.exit(1)
 
     book_name = sys.argv[1]
-    base_dir = Path(__file__).parent
+    base_dir = Path(__file__).parent.parent
     book_dir = base_dir / "books" / book_name
 
     if not book_dir.exists():
@@ -217,7 +217,17 @@ def main():
         "documentclass=book",
     ]
 
-    print(f"Running Docker to generate PDF...")
+    if language == "ru":
+        cmd += [
+            "-V",
+            "lang=ru-RU",
+            "-V",
+            "mainlang=russian",
+            "-V",
+            "polyglossia",
+        ]
+
+    print("Running Docker to generate PDF...")
     try:
         subprocess.run(cmd, check=True)
         print(f"[OK] KDP interior PDF generated: {output_pdf_path}")

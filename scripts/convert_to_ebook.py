@@ -135,7 +135,7 @@ def prompt_for_book_selection(plan_folders: list[Path]) -> str | None:
 
 
 def main():
-    base_dir = Path(__file__).parent
+    base_dir = Path(__file__).parent.parent
     books_root = base_dir / "books"
 
     if len(sys.argv) >= 2:
