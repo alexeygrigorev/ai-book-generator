@@ -102,47 +102,58 @@ Or run without arguments to select from available chapter-based plans:
 uv run python -m chapter_based.execute
 ```
 
-## Plan Structure
+## Plan Structure Comparison
 
-The chapter-based plan YAML structure:
-
+### Section-Based Plan (`book_generator/`)
 ```yaml
 book_language: en
 name: Your Book Title
-slug: your-book-title
-target_reader: Description of target audience
-back_cover_description: Back cover text
 parts:
-  - name: Part 1 Name
-    introduction: Introduction to this part
+  - name: Part 1
     chapters:
       - name: Chapter Name
-        bullet_points:
+        sections:                    # ← Chapter has sections
+          - name: Section 1 Name
+            bullet_points: [...]
+          - name: Section 2 Name
+            bullet_points: [...]
+```
+
+### Chapter-Based Plan (`chapter_based/`)
+```yaml
+book_language: en
+name: Your Book Title
+parts:
+  - name: Part 1
+    chapters:
+      - name: Chapter Name
+        bullet_points:              # ← Bullet points directly on chapter
           - First key topic
           - Second key topic
-          - ... (7-8 bullet points total)
+          - ... (7-8 total)
 ```
 
-## Output Structure
+## Output Structure Comparison
 
+### Section-Based Output
 ```
-books/your-book-title/
-├── plan.yaml
-├── back_cover.md
+books/your-book/
 └── part_01/
     ├── _part_01_intro.md
-    ├── 01_chapter.md
-    ├── 02_chapter.md
-    └── ...
+    ├── 01_00_intro.md          # Chapter intro
+    ├── 01_01_section.md        # Section 1
+    ├── 01_02_section.md        # Section 2
+    ├── 01_03_section.md        # Section 3
+    ├── 01_04_section.md        # Section 4
+    └── 02_00_intro.md          # Next chapter intro
 ```
 
-## Key Differences from Section-Based
-
-| Feature | Section-Based | Chapter-Based |
-|---------|---------------|---------------|
-| Plan location | `book_generator/plan.py` | `chapter_based/plan.py` |
-| Execute location | `book_generator/execute.py` | `chapter_based/execute.py` |
-| Plan model | `BookSectionPlan` inside chapters | `ChapterPlan` with bullet_points |
-| Generation unit | Per section (800-1200 words) | Per chapter (3000-5000 words) |
-| Output files | `01_01_section.md`, `01_02_section.md` | `01_chapter.md`, `02_chapter.md` |
-| LLM calls per chapter | 1 intro + N sections | 1 full chapter |
+### Chapter-Based Output
+```
+books/your-book/
+└── part_01/
+    ├── _part_01_intro.md
+    ├── 01_chapter.md           # Full chapter (3000-5000 words)
+    ├── 02_chapter.md           # Next full chapter
+    └── ...
+```
