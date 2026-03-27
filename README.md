@@ -174,7 +174,7 @@ make ebook
 make ebook BOOK=sirens
 
 # Direct
-python scripts/convert_to_ebook.py sirens
+python scripts/convert_to_ebook.py mir-na-trosakh
 ```
 
 Requirements: Pandoc must be installed
