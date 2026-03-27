@@ -35,16 +35,40 @@ make ui
 make generate-book
 ```
 
+## Two Generation Modes
+
+| Aspect | Section-Based (`book_generator/`) | Chapter-Based (`chapter_based/`) |
+|--------|-----------------------------------|----------------------------------|
+| Generation unit | Per section (800-1200 words) | Per chapter (3000-5000 words) |
+| LLM calls per chapter | 1 intro + 4-6 sections = 5-7 calls | 1 call per chapter |
+| Best for | Longer, detailed books | Shorter, cohesive books |
+| Plan structure | Chapters → Sections → Bullet points | Chapters → Bullet points |
+
+```bash
+# Section-based (longer books)
+uv run python -m book_generator.plan -p books/mybook/input.txt
+uv run python -m book_generator.execute mybook
+
+# Chapter-based (shorter books)
+uv run python -m chapter_based.plan -p books/mybook/input.txt
+uv run python -m chapter_based.execute mybook
+```
+
 ## Project Structure
 
 ```
 ai-book-generator/
-├── book_generator/          # Core book generation library
+├── book_generator/          # Section-based generation (longer books)
 │   ├── execute.py          # Main execution module
 │   ├── plan.py             # Book planning and structuring
 │   ├── content.py          # Content generation
 │   ├── tts.py              # Text-to-speech generation
 │   └── ...
+├── chapter_based/           # Chapter-based generation (shorter books)
+│   ├── execute.py          # Generates one full chapter at a time
+│   ├── plan.py             # Creates plan with bullet points per chapter
+│   ├── models.py           # Data models
+│   └── README.md           # Detailed comparison of both modes
 ├── scripts/                # Utility scripts
 │   ├── run_tts.py          # TTS generation runner
 │   ├── convert_wav_to_mp3.py   # Audio format conversion
@@ -67,7 +91,7 @@ ai-book-generator/
 ### Core Generation
 
 #### `book_generator/execute.py`
-**Purpose**: Main book content generation module
+Purpose: Main book content generation module
 
 Generates complete book content including:
 - Structured book plans with parts and chapters
@@ -75,7 +99,7 @@ Generates complete book content including:
 - Part introductions
 - Metadata and back cover descriptions
 
-**Usage**:
+Usage:
 ```bash
 uv run python -m book_generator.execute
 ```
@@ -83,7 +107,7 @@ uv run python -m book_generator.execute
 ### Audio Processing
 
 #### `scripts/run_tts.py`
-**Purpose**: Generate text-to-speech audio for book content
+Purpose: Generate text-to-speech audio for book content
 
 Features:
 - Parallel processing with configurable thread count
@@ -91,7 +115,7 @@ Features:
 - Progress tracking
 - Skips already-generated files
 
-**Usage**:
+Usage:
 ```bash
 # Via make
 make tts BOOK=sirens
@@ -100,12 +124,12 @@ make tts BOOK=sirens
 python scripts/run_tts.py
 ```
 
-**Configuration**: Edit the script to change book folder or thread count.
+Configuration: Edit the script to change book folder or thread count.
 
 ---
 
 #### `scripts/convert_wav_to_mp3.py`
-**Purpose**: Convert WAV audio files in S3 bucket to MP3 format
+Purpose: Convert WAV audio files in S3 bucket to MP3 format
 
 Features:
 - Downloads WAV from S3
@@ -114,7 +138,7 @@ Features:
 - Skips files already converted
 - Keeps local MP3 cache
 
-**Usage**:
+Usage:
 ```bash
 # Via make
 make convert-audio
@@ -124,7 +148,7 @@ python scripts/convert_wav_to_mp3.py --book sirens
 python scripts/convert_wav_to_mp3.py --source-bucket my-bucket
 ```
 
-**Arguments**:
+Arguments:
 - `--book`: Optional book name filter
 - `--source-bucket`: S3 bucket with WAV files (default: ai-generated-audio-books-eu-west-1-wav)
 - `--output-bucket`: Destination bucket (defaults to source bucket)
@@ -132,7 +156,7 @@ python scripts/convert_wav_to_mp3.py --source-bucket my-bucket
 ### Publishing
 
 #### `scripts/convert_to_ebook.py`
-**Purpose**: Convert markdown book to EPUB format
+Purpose: Convert markdown book to EPUB format
 
 Features:
 - Aggregates markdown from book structure
@@ -141,7 +165,7 @@ Features:
 - Embeds cover image (JPG/PNG)
 - Proper header hierarchy
 
-**Usage**:
+Usage:
 ```bash
 # Via make (interactive selection)
 make ebook
@@ -153,12 +177,12 @@ make ebook BOOK=sirens
 python scripts/convert_to_ebook.py sirens
 ```
 
-**Requirements**: Pandoc must be installed
+Requirements: Pandoc must be installed
 
 ---
 
 #### `scripts/create_kdp_interior.py`
-**Purpose**: Generate Amazon KDP print interior PDF
+Purpose: Generate Amazon KDP print interior PDF
 
 Features:
 - 6×9 inch page size (KDP standard)
@@ -168,7 +192,7 @@ Features:
 - Table of contents
 - Docker-based (reproducible builds)
 
-**Usage**:
+Usage:
 ```bash
 # Via make
 make kdp-interior BOOK=sirens
@@ -177,12 +201,12 @@ make kdp-interior BOOK=sirens
 python scripts/create_kdp_interior.py sirens
 ```
 
-**Requirements**: Docker must be installed and running
+Requirements: Docker must be installed and running
 
 ---
 
 #### `scripts/create_kdp_cover.py`
-**Purpose**: Generate Amazon KDP cover PDF with back cover, spine, and front cover
+Purpose: Generate Amazon KDP cover PDF with back cover, spine, and front cover
 
 Features:
 - Automatic spine width calculation
@@ -192,7 +216,7 @@ Features:
 - Cyrillic text support
 - KDP-compliant dimensions
 
-**Usage**:
+Usage:
 ```bash
 # Via make
 make kdp-cover BOOK=sirens
@@ -203,21 +227,21 @@ uv run python scripts/create_kdp_cover.py sirens
 uv run python scripts/create_kdp_cover.py metals-pocketbook  --pages 80
 ```
 
-**Arguments**:
+Arguments:
 - Book name (required)
 - `--pages`: Page count for spine calculation (optional, auto-detects from PDF)
 
 ### Setup & Configuration
 
 #### `scripts/create_s3_reader_user.py`
-**Purpose**: Create AWS IAM user with S3 read/write access for TTS audio
+Purpose: Create AWS IAM user with S3 read/write access for TTS audio
 
 Creates:
 - IAM user: `tts-audio-reader`
 - S3 read/write policy for the audio bucket
 - Access keys for authentication
 
-**Usage**:
+Usage:
 ```bash
 # Via make
 make setup-aws
@@ -226,12 +250,12 @@ make setup-aws
 python scripts/create_s3_reader_user.py
 ```
 
-**Output**: Displays AWS credentials to add to `.envrc` or environment
+Output: Displays AWS credentials to add to `.envrc` or environment
 
 ### User Interface
 
 #### `ui/streamlit_app.py`
-**Purpose**: Interactive web interface for book planning
+Purpose: Interactive web interface for book planning
 
 Features:
 - Book topic configuration
@@ -241,7 +265,7 @@ Features:
 - Cost tracking
 - Structured plan export to YAML
 
-**Usage**:
+Usage:
 ```bash
 # Via make
 make ui
